@@ -44,8 +44,10 @@ async def check_auth():
     auth = request.authorization
     if (
         auth is None
-        or auth.username != os.environ['NOTHUB_USERNAME']
-        or auth.password != os.environ['NOTHUB_PASSWORD']
+        or not auth.username
+        or not auth.password
+        or auth.username != os.environ.get('NOTHUB_USERNAME')
+        or auth.password != os.environ.get('NOTHUB_PASSWORD')
     ):
         return await make_response(
             'Authorization required', 401, {'WWW-Authenticate': 'Basic realm="get out"'}
