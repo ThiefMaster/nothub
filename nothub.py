@@ -1,10 +1,8 @@
 import asyncio
 import json
 import os
-from typing import Optional
 
 from quart import Quart, jsonify, make_response, request
-from quart.exceptions import Unauthorized
 
 app = Quart(__name__)
 clients = set()
