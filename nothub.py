@@ -49,15 +49,19 @@ async def delete_data():
 
 @app.route('/data/', methods=('PATCH',))
 async def patch_data():
-    datadict.update(await request.get_json())
+    data = await request.get_json()
+    if data:
+        datadict.update(data)
     await _notify()
     return jsonify(datadict)
 
 
 @app.route('/data/', methods=('PUT',))
 async def replace_data():
+    data = await request.get_json()
     datadict.clear()
-    datadict.update(await request.get_json())
+    if data:
+        datadict.update(data)
     await _notify()
     return jsonify(datadict), 201
 
