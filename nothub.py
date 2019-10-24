@@ -11,32 +11,6 @@ clients = set()
 datadict = {}
 
 
-class ServerSentEvent:
-    def __init__(
-        self,
-        data: str,
-        *,
-        event: Optional[str] = None,
-        id: Optional[int] = None,
-        retry: Optional[int] = None,
-    ) -> None:
-        self.data = data
-        self.event = event
-        self.id = id
-        self.retry = retry
-
-    def encode(self) -> bytes:
-        message = f'data: {self.data}'
-        if self.event is not None:
-            message = f'{message}\nevent: {self.event}'
-        if self.id is not None:
-            message = f'{message}\nid: {self.id}'
-        if self.retry is not None:
-            message = f'{message}\nretry: {self.retry}'
-        message = f'{message}\r\n\r\n'
-        return message.encode('utf-8')
-
-
 @app.before_request
 async def check_auth():
     if request.endpoint == 'index':
@@ -117,6 +91,10 @@ async def _notify():
         await queue.put(payload)
 
 
+def _sse(data):
+    return f'data: {data}\r\n\r\n'.encode()
+
+
 @app.route('/updates')
 async def sse_updates():
     queue = asyncio.Queue()
@@ -124,11 +102,10 @@ async def sse_updates():
 
     async def send_events():
         try:
-            yield ServerSentEvent(json.dumps(datadict)).encode()
+            yield _sse(json.dumps(datadict))
             while True:
                 data = await queue.get()
-                event = ServerSentEvent(data)
-                yield event.encode()
+                yield _sse(data)
         except asyncio.CancelledError:
             clients.remove(queue)
             raise
